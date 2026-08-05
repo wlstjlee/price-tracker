@@ -21,16 +21,14 @@ public class InterestProduct extends BaseEntity {
     private String url;     // 상품 URL
     private String imageUrl;    // 이미지 링크
     private String mallName;    // 판매 쇼핑몰 이름
-    private String naverProductId;  // 네이버 상품 고유Id ( 최저가 갱신시 필요 )
     private int currentLowestPrice; // 현재 최저가
 
     @Builder
-    public InterestProduct(String name, String url, String imageUrl, String mallName, String naverProductId, int currentLowestPrice){
+    public InterestProduct(String name, String url, String imageUrl, String mallName, int currentLowestPrice){
         this.name = name;
         this.url = url;
         this.imageUrl = imageUrl;
         this.mallName = mallName;
-        this.naverProductId = naverProductId;
         this.currentLowestPrice = currentLowestPrice;
     }
 

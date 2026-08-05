@@ -8,4 +8,6 @@ import java.util.List;
 public interface PriceHistoryRepository extends JpaRepository<PriceHistory, Long> {
 
     List<PriceHistory> findByInterestProductIdOrderByCreatedAtDesc(Long id);
+
+    void deleteByInterestProductId(Long interestProductId);
 }
