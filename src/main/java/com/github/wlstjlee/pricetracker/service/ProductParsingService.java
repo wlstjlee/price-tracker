@@ -13,8 +13,11 @@ public class ProductParsingService {
     public ProductParseResult parse(String url) {
         try {
             Document doc = Jsoup.connect(url)
-                    .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36")
-                    .timeout(5000)
+                    .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+                    .header("Accept-Language", "ko-KR,ko;q=0.9")
+                    .header("Referer", "https://www.coupang.com/")
+                    .timeout(10000)
+                    .ignoreHttpErrors(false)
                     .get();
 
             // 상품명
@@ -39,6 +42,7 @@ public class ProductParsingService {
                     .build();
 
         } catch (Exception e) {
+            e.printStackTrace();
             throw new ProductParseFailedException(url);
         }
     }

@@ -2,7 +2,6 @@ package com.github.wlstjlee.pricetracker.service;
 
 import com.github.wlstjlee.pricetracker.dto.*;
 import com.github.wlstjlee.pricetracker.entity.InterestProduct;
-import com.github.wlstjlee.pricetracker.entity.PriceHistory;
 import com.github.wlstjlee.pricetracker.exception.InterestProductNotFoundException;
 import com.github.wlstjlee.pricetracker.repository.InterestProductRepository;
 import com.github.wlstjlee.pricetracker.repository.PriceHistoryRepository;
@@ -19,7 +18,7 @@ public class InterestProductService {
 
     private final InterestProductRepository interestProductRepository;
     private final PriceHistoryRepository priceHistoryRepository;
-    private final ProductParsingService productParsingService;   // 추가
+    private final ProductParsingService productParsingService;
 
     @Transactional
     public InterestProductResponse create(InterestProductCreateRequest request) {
