@@ -28,7 +28,7 @@ public class InterestProductService {
                 .name(parsed.getName())
                 .url(parsed.getUrl())
                 .imageUrl(parsed.getImageUrl())
-                .mallName("쿠팡")
+                .mallName("무신사")
                 .currentLowestPrice(parsed.getPrice())
                 .build();
 

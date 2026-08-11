@@ -4,7 +4,6 @@ import com.github.wlstjlee.pricetracker.dto.ProductParseResult;
 import com.github.wlstjlee.pricetracker.exception.ProductParseFailedException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -14,25 +13,16 @@ public class ProductParsingService {
         try {
             Document doc = Jsoup.connect(url)
                     .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
-                    .header("Accept-Language", "ko-KR,ko;q=0.9")
-                    .header("Referer", "https://www.coupang.com/")
                     .timeout(10000)
-                    .ignoreHttpErrors(false)
                     .get();
 
-            // 상품명
-            String name = doc.selectFirst("h1.product-title span.twc-font-bold").text();
+            String rawName = doc.selectFirst("meta[property=og:title]").attr("content");
+            String name = rawName.split(" - 사이즈")[0].trim();
 
-            // 가격 - class에 대괄호가 있어서, 부모 태그 구조로 접근
-            Element priceContainer = doc.selectFirst("div.price-layout-container");
-            String priceText = priceContainer.selectFirst("span").text();  // "35,910"
+            String priceText = doc.selectFirst("meta[property=product:price:amount]").attr("content");
             int price = Integer.parseInt(priceText.replaceAll("[^0-9]", ""));
 
-            // 이미지
-            String imageUrl = doc.selectFirst("div.product-image img").attr("src");
-            if (imageUrl.startsWith("//")) {
-                imageUrl = "https:" + imageUrl;   // 프로토콜 없는 URL 보정
-            }
+            String imageUrl = doc.selectFirst("meta[property=og:image]").attr("content");
 
             return ProductParseResult.builder()
                     .name(name)
@@ -42,8 +32,7 @@ public class ProductParsingService {
                     .build();
 
         } catch (Exception e) {
-            e.printStackTrace();
-            throw new ProductParseFailedException(url);
+            throw new ProductParseFailedException(url, e);
         }
     }
 }

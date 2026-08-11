@@ -1,13 +1,11 @@
 package com.github.wlstjlee.pricetracker.dto;
 
-// 관심상품 추가 후 응답 DTO
-
 import com.github.wlstjlee.pricetracker.entity.InterestProduct;
 import lombok.Builder;
 import lombok.Getter;
-
 import java.time.LocalDateTime;
 
+// 관심상품 추가 후 응답 DTO
 @Getter
 @Builder
 public class InterestProductResponse {

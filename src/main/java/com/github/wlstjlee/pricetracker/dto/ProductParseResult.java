@@ -2,7 +2,6 @@ package com.github.wlstjlee.pricetracker.dto;
 
 import lombok.Builder;
 import lombok.Getter;
-
 @Getter
 @Builder
 public class ProductParseResult {

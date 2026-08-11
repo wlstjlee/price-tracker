@@ -4,6 +4,7 @@ import com.github.wlstjlee.pricetracker.dto.InterestProductCreateRequest;
 import com.github.wlstjlee.pricetracker.dto.InterestProductResponse;
 import com.github.wlstjlee.pricetracker.dto.PriceHistoryResponse;
 import com.github.wlstjlee.pricetracker.service.InterestProductService;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -19,6 +20,7 @@ public class InterestProductController {
 
     private final InterestProductService interestProductService;
 
+    @Operation(summary = "관심상품 등록", description = "상품 URL을 받아 스크래핑 후 관심상품으로 등록합니다")
     @PostMapping
     public ResponseEntity<InterestProductResponse> create(@RequestBody @Valid InterestProductCreateRequest request){
         InterestProductResponse response = interestProductService.create(request);
