@@ -15,14 +15,14 @@
 - [x] 상품 URL 입력을 통한 관심상품 등록 (쿠팡 지원, 웹 스크래핑 기반 상품 정보 자동 수집)
 - [x] 관심상품 등록 / 조회 / 삭제
 - [x] 가격 변동 이력 저장 및 조회
-- [ ] 주기적 최저가 자동 갱신 (스케줄러) - 진행 중
+- [x] 주기적 최저가 자동 갱신 스케줄러
 - [ ] 다른 쇼핑몰(11번가, G마켓 등) 지원 확장 (예정)
 - [ ] 회원가입 / 로그인 (예정)
 - [ ] 목표가격 도달 시 이메일 알림 (예정)
 
 ## ⚠️ 지원 대상
 
-현재는 **쿠팡(coupang.com) 상품 URL만 지원**합니다.
+현재는 **무신사(musinsa.com) 상품 URL만 지원**합니다.
 
 웹 스크래핑 방식은 특정 쇼핑몰의 HTML 구조에 맞춰 CSS 선택자를 지정하는 방식이라,
 다른 쇼핑몰(11번가, G마켓 등) URL을 입력하면 상품 정보를 찾지 못해 파싱에 실패하며,
@@ -48,17 +48,18 @@ com.github.wlstjlee.pricetracker
 ├── entity           # JPA 엔티티
 ├── exception        # 커스텀 예외, 전역 예외 처리
 ├── repository       # JPA Repository
+├── scheduler        # 최저가 자동 갱신 스케쥴러 
 └── service          # 비즈니스 로직 (관심상품 관리, 웹 스크래핑)
 ```
 
 ## 📡 API 명세
 
-| 기능 | Method | URL | 요청 | 응답 |
-|---|---|---|---|---|
-| 관심상품 등록 | POST | `/api/interests` | 쿠팡 상품 URL | 스크래핑된 상품 정보 |
-| 관심상품 목록 조회 | GET | `/api/interests` | 없음 | 관심상품 리스트 |
-| 관심상품 삭제 | DELETE | `/api/interests/{id}` | 없음 | 없음 (204) |
-| 가격 이력 조회 | GET | `/api/interests/{id}/histories` | 없음 | 가격 변동 이력 리스트 |
+| 기능 | Method | URL | 요청         | 응답 |
+|---|---|---|------------|---|
+| 관심상품 등록 | POST | `/api/interests` | 무신사 상품 URL | 스크래핑된 상품 정보 |
+| 관심상품 목록 조회 | GET | `/api/interests` | 없음         | 관심상품 리스트 |
+| 관심상품 삭제 | DELETE | `/api/interests/{id}` | 없음         | 없음 (204) |
+| 가격 이력 조회 | GET | `/api/interests/{id}/histories` | 없음         | 가격 변동 이력 리스트 |
 
 ## 🗂 ERD
 
@@ -67,10 +68,10 @@ InterestProduct (1) ──────< (N) PriceHistory
      id                          id
      name                        price
      url                         interest_product_id (FK)
-     imageUrl                    createdAt
-     mallName
-     currentLowestPrice
-     createdAt / updatedAt
+     image_url                    created_at
+     mall_name                    updated_at
+     current_lowest_price
+     created_at / updated_at
 ```
 
 ## 🚀 실행 방법
@@ -118,11 +119,16 @@ spring.jpa.hibernate.ddl-auto=update
 - **배운 점**: 외부 API 의존 시 서비스 중단 리스크를 고려해야 하며, Controller/Service 계층을 분리해둔 덕분에 핵심 로직(외부 데이터 수집 방식)만 교체하고 Entity/Repository/Controller 등 나머지 구조는 그대로 재사용할 수 있었음
 - **현재 한계**: 웹 스크래핑 방식은 특정 쇼핑몰의 HTML 구조에 종속적이라, 현재는 쿠팡 URL만 지원함. 다른 쇼핑몰을 지원하려면 각 사이트별로 별도의 파싱 로직(CSS 선택자)이 필요함
 
-### 6. 쿠팡 웹 스크래핑 시 403 Forbidden 발생
-- **원인**: 쿠팡이 자동화된 요청(봇)을 감지하는 보안 시스템을 갖추고 있어, Jsoup의 단순 HTTP 요청은 봇으로 판별되어 차단됨
+### 4. 쿠팡 웹 스크래핑 시 403 Forbidden 발생
+- **원인**: 쿠팡이 Akamai 기반의 강력한 봇 탐지 시스템을 갖추고 있어, Jsoup의 단순 HTTP 요청은 봇으로 판별되어 차단됨
 - **시도한 방법**: User-Agent, Referer, Accept-Language 등 HTTP 헤더를 실제 브라우저와 유사하게 강화 → 여전히 403으로 차단됨
 - **원인 분석**: Jsoup은 HTML만 가져올 뿐 JavaScript 실행, 쿠키 교환 등 실제 브라우저의 동작을 재현하지 못해 대형 쇼핑몰의 봇 탐지에 쉽게 걸림
-- **다음 계획**: (진행 중 - Selenium 등 브라우저 자동화 도구 검토 또는 봇 차단이 약한 대상으로 전환 예정)
+- **대응**: 스크래핑 대상을 쿠팡에서 무신사로 변경  
+
+### 5. 무신사 상품 상세 페이지 파싱 성공 원인 분석
+- **배경**: 무신사는 SPA 기반 사이트로 알려져 있어, Jsoup으로는 파싱이 불가능할 것으로 예상했으나 실제로는 성공함 
+- **원인**: 무신사는 검색엔진 최적화(SEO) 를 위해 상품 상세페이지를 SSR(서버사이드 렌더링) 방식을 병행하고 있어, 서버가 최초 응답 시점에 이미 완성된 HTML을 내려줌
+- **적용**: CSS 선택자 대신 사이트 리뉴얼에 영향을 덜 받는 og:titla, og:image, product:price:amount 등 Open Graph 태그를 파싱 대상으로 선택
 
 ## 💭 배운 점
 
