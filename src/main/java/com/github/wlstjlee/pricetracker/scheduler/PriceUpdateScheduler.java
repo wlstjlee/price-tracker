@@ -21,7 +21,7 @@ public class PriceUpdateScheduler {
     private final PriceHistoryRepository priceHistoryRepository;
     private final ProductParsingService productParsingService;
 
-    @Scheduled(cron = "0 */1 * * * *")   // 개발 중엔 1분마다 (나중에 실제 운영시엔 조정)
+    @Scheduled(cron = "0 */5 * * * *")   // 개발 중엔 5분마다 (나중에 실제 운영시엔 조정)
     public void updateLowestPrices() {
         List<InterestProduct> products = interestProductRepository.findAll();
 
