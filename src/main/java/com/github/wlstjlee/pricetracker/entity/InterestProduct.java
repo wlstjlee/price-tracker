@@ -1,9 +1,6 @@
 package com.github.wlstjlee.pricetracker.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -23,13 +20,18 @@ public class InterestProduct extends BaseEntity {
     private String mallName;    // 판매 쇼핑몰 이름
     private int currentLowestPrice; // 현재 최저가
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name="member_id")
+    private Member member;
+
     @Builder
-    public InterestProduct(String name, String url, String imageUrl, String mallName, int currentLowestPrice){
+    public InterestProduct(String name, String url, String imageUrl, String mallName, int currentLowestPrice,Member member){
         this.name = name;
         this.url = url;
         this.imageUrl = imageUrl;
         this.mallName = mallName;
         this.currentLowestPrice = currentLowestPrice;
+        this.member = member;
     }
 
     // 스케쥴러 최저가 갱신용

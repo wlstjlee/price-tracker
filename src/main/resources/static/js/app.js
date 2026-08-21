@@ -1,3 +1,24 @@
+const authView = document.getElementById("auth-view");
+const appView = document.getElementById("app-view");
+
+const loginTabButton = document.getElementById("login-tab-button");
+const signupTabButton = document.getElementById("signup-tab-button");
+const loginForm = document.getElementById("login-form");
+const signupForm = document.getElementById("signup-form");
+const loginEmailInput = document.getElementById("login-email");
+const loginPasswordInput = document.getElementById("login-password");
+const loginButton = document.getElementById("login-button");
+const loginError = document.getElementById("login-error");
+const signupNameInput = document.getElementById("signup-name");
+const signupEmailInput = document.getElementById("signup-email");
+const signupPasswordInput = document.getElementById("signup-password");
+const signupButton = document.getElementById("signup-button");
+const signupError = document.getElementById("signup-error");
+const signupSuccess = document.getElementById("signup-success");
+
+const userInfoEl = document.getElementById("user-info");
+const logoutButton = document.getElementById("logout-button");
+
 const addForm = document.getElementById("add-form");
 const urlInput = document.getElementById("url-input");
 const addButton = document.getElementById("add-button");
@@ -214,7 +235,131 @@ function renderChart(histories) {
   });
 }
 
+function showLoginTab() {
+  loginTabButton.classList.add("active");
+  signupTabButton.classList.remove("active");
+  loginForm.classList.remove("hidden");
+  signupForm.classList.add("hidden");
+  signupSuccess.classList.add("hidden");
+}
+
+function showSignupTab() {
+  signupTabButton.classList.add("active");
+  loginTabButton.classList.remove("active");
+  signupForm.classList.remove("hidden");
+  loginForm.classList.add("hidden");
+}
+
+function showAuthView(message) {
+  authView.classList.remove("hidden");
+  appView.classList.add("hidden");
+  closeHistoryChart();
+  showLoginTab();
+  if (message) {
+    showLoginError(message);
+  } else {
+    clearLoginError();
+  }
+}
+
+function showAppView() {
+  const user = auth.getCurrentUser();
+  userInfoEl.textContent = user ? `${user.name || user.email} 님` : "";
+  authView.classList.add("hidden");
+  appView.classList.remove("hidden");
+  loadProductList();
+}
+
+function showLoginError(message) {
+  loginError.textContent = message;
+  loginError.classList.remove("hidden");
+}
+
+function clearLoginError() {
+  loginError.textContent = "";
+  loginError.classList.add("hidden");
+}
+
+function showSignupError(message) {
+  signupError.textContent = message;
+  signupError.classList.remove("hidden");
+}
+
+function clearSignupError() {
+  signupError.textContent = "";
+  signupError.classList.add("hidden");
+}
+
+async function handleLoginSubmit(event) {
+  event.preventDefault();
+  clearLoginError();
+
+  const email = loginEmailInput.value.trim();
+  const password = loginPasswordInput.value;
+  if (!email || !password) return;
+
+  loginButton.disabled = true;
+  loginButton.textContent = "로그인 중...";
+
+  try {
+    const { token, email: loggedInEmail, name } = await authApi.login({ email, password });
+    auth.setSession(token, loggedInEmail, name);
+    loginForm.reset();
+    showAppView();
+  } catch (err) {
+    showLoginError(err.message);
+  } finally {
+    loginButton.disabled = false;
+    loginButton.textContent = "로그인";
+  }
+}
+
+async function handleSignupSubmit(event) {
+  event.preventDefault();
+  clearSignupError();
+  signupSuccess.classList.add("hidden");
+
+  const name = signupNameInput.value.trim();
+  const email = signupEmailInput.value.trim();
+  const password = signupPasswordInput.value;
+  if (!name || !email || !password) return;
+
+  signupButton.disabled = true;
+  signupButton.textContent = "가입 중...";
+
+  try {
+    await authApi.signup({ email, password, name });
+    signupForm.reset();
+    showLoginTab();
+    signupSuccess.textContent = "회원가입이 완료되었습니다. 로그인해주세요.";
+    signupSuccess.classList.remove("hidden");
+    loginEmailInput.value = email;
+  } catch (err) {
+    showSignupError(err.message);
+  } finally {
+    signupButton.disabled = false;
+    signupButton.textContent = "회원가입";
+  }
+}
+
+function handleLogout() {
+  auth.clearSession();
+  showAuthView();
+}
+
+auth.setUnauthorizedHandler(() => showAuthView("로그인이 필요합니다. 다시 로그인해주세요."));
+
+loginTabButton.addEventListener("click", showLoginTab);
+signupTabButton.addEventListener("click", showSignupTab);
+loginForm.addEventListener("submit", handleLoginSubmit);
+signupForm.addEventListener("submit", handleSignupSubmit);
+logoutButton.addEventListener("click", handleLogout);
+
 addForm.addEventListener("submit", handleAddSubmit);
 chartCloseButton.addEventListener("click", closeHistoryChart);
 
-loadProductList();
+if (auth.getToken()) {
+  showAppView();
+} else {
+  showAuthView();
+}

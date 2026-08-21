@@ -14,36 +14,66 @@
     <p class="subtitle">관심상품 URL을 등록하면 최저가 변동을 추적해드려요. (현재 무신사 상품만 지원)</p>
   </header>
 
-  <section class="add-form-section">
-    <form id="add-form" class="add-form">
-      <input
-        type="url"
-        id="url-input"
-        placeholder="무신사 상품 URL을 입력하세요 (예: https://www.musinsa.com/products/...)"
-        required
-      >
-      <button type="submit" id="add-button">등록</button>
+  <section id="auth-view" class="auth-view hidden">
+    <div class="auth-tabs">
+      <button type="button" id="login-tab-button" class="auth-tab active">로그인</button>
+      <button type="button" id="signup-tab-button" class="auth-tab">회원가입</button>
+    </div>
+
+    <form id="login-form" class="auth-form">
+      <input type="email" id="login-email" placeholder="이메일" required>
+      <input type="password" id="login-password" placeholder="비밀번호" required>
+      <button type="submit" id="login-button">로그인</button>
     </form>
-    <p id="add-error" class="error-message hidden"></p>
+    <p id="login-error" class="error-message hidden"></p>
+
+    <form id="signup-form" class="auth-form hidden">
+      <input type="text" id="signup-name" placeholder="이름" required>
+      <input type="email" id="signup-email" placeholder="이메일" required>
+      <input type="password" id="signup-password" placeholder="비밀번호 (8자 이상)" required>
+      <button type="submit" id="signup-button">회원가입</button>
+    </form>
+    <p id="signup-error" class="error-message hidden"></p>
+    <p id="signup-success" class="success-message hidden"></p>
   </section>
 
-  <section class="list-section">
-    <h2>관심상품 목록</h2>
-    <div id="loading" class="loading hidden">불러오는 중...</div>
-    <div id="empty-message" class="empty-message hidden">등록된 관심상품이 없습니다. 위에서 URL을 등록해보세요.</div>
-    <ul id="product-list" class="product-list"></ul>
-  </section>
+  <div id="app-view" class="hidden">
+    <div class="user-bar">
+      <span id="user-info"></span>
+      <button type="button" id="logout-button">로그아웃</button>
+    </div>
 
-  <section id="chart-section" class="chart-section hidden">
-    <div class="chart-header">
-      <h2 id="chart-title">가격 변동 이력</h2>
-      <button id="chart-close" class="close-button" aria-label="닫기">✕</button>
-    </div>
-    <div id="chart-empty" class="empty-message hidden">아직 저장된 가격 이력이 없습니다.</div>
-    <div class="chart-canvas-wrapper">
-      <canvas id="price-chart"></canvas>
-    </div>
-  </section>
+    <section class="add-form-section">
+      <form id="add-form" class="add-form">
+        <input
+          type="url"
+          id="url-input"
+          placeholder="무신사 상품 URL을 입력하세요 (예: https://www.musinsa.com/products/...)"
+          required
+        >
+        <button type="submit" id="add-button">등록</button>
+      </form>
+      <p id="add-error" class="error-message hidden"></p>
+    </section>
+
+    <section class="list-section">
+      <h2>관심상품 목록</h2>
+      <div id="loading" class="loading hidden">불러오는 중...</div>
+      <div id="empty-message" class="empty-message hidden">등록된 관심상품이 없습니다. 위에서 URL을 등록해보세요.</div>
+      <ul id="product-list" class="product-list"></ul>
+    </section>
+
+    <section id="chart-section" class="chart-section hidden">
+      <div class="chart-header">
+        <h2 id="chart-title">가격 변동 이력</h2>
+        <button id="chart-close" class="close-button" aria-label="닫기">✕</button>
+      </div>
+      <div id="chart-empty" class="empty-message hidden">아직 저장된 가격 이력이 없습니다.</div>
+      <div class="chart-canvas-wrapper">
+        <canvas id="price-chart"></canvas>
+      </div>
+    </section>
+  </div>
 </div>
 
 <template id="product-card-template">
