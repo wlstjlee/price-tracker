@@ -8,15 +8,15 @@
 
 ### 비밀번호 암호화 저장 (BCrypt)
 비밀번호는 단방향 해싱으로 저장되어, DB가 유출되어도 원본을 복원할 수 없습니다.
-![DB](./docs/password.png)
+<img src="./docs/password.png" width="600" alt="DB">
 
-### 회원별 관심상품 격리 
-| 회원 A                      | 회원 B                      |
-|---------------------------|---------------------------|
-| ![A](./docs/member-a.png) | ![B](./docs/member-b.png) |
+### 회원별 관심상품 격리
+| 회원 A                                          | 회원 B                                          |
+|-------------------------------------------------|-------------------------------------------------|
+| <img src="./docs/member-a.png" width="380" alt="A"> | <img src="./docs/member-b.png" width="380" alt="B"> |
 
 ### 가격 변동 이력
-![가격이력](./docs/price-chart.png)
+<img src="./docs/price-chart.png" width="600" alt="가격이력">
 
 
 ## 📌 소개
@@ -55,6 +55,7 @@
 - MySQL
 - Jsoup
 - HTML/CSS/JavaScript (프론트엔드)
+- Docker, AWS EC2 (배포)
 
 ## 참고사항
 프론트엔드는 백엔드 API 동작 확인을 위한 최소한의 데모 화면으로,
@@ -135,6 +136,24 @@ jwt.expiration=3600000
 ./gradlew bootRun
 ```
 
+## 🧪 테스트
+
+Service(단위 테스트), Repository(`@DataJpaTest`), Controller(`@WebMvcTest`) 계층별로 테스트 코드를 작성했습니다.
+
+```bash
+./gradlew test
+```
+
+## ☁️ 배포
+
+AWS EC2(Ubuntu, t2.micro)에 Docker로 MySQL을 띄우고, Spring Boot를 직접 배포했습니다.
+
+```
+[사용자] → http://퍼블릭IP:8080 → [EC2: Spring Boot(8080)] → localhost:3306 → [Docker: MySQL]
+```
+
+배포 과정에서 겪은 문제들은 아래 트러블슈팅 9~11번에 정리했습니다.
+
 ## 🐛 트러블슈팅
 
 ### 1. `created_at` / `updated_at`이 계속 NULL로 저장됨
@@ -185,6 +204,33 @@ jwt.expiration=3600000
 - **구현**: `InterestProduct`에 `Member`와의 `@ManyToOne` 연관관계를 추가하고, 삭제/조회 시 요청자가 해당 상품의 실제 소유자인지 확인하는 `validateOwner()` 로직 추가
 - **검증**: 다른 회원이 소유한 관심상품에 접근을 시도할 경우 `403 Forbidden`을 정상적으로 반환함을 확인
 - **배운 점**: 인증(로그인 여부)과 별개로, 인가(해당 자원에 대한 권한)는 각 API 로직에서 명시적으로 검증해야 하며, 이 둘을 혼동하면 로그인만 하면 다른 사용자의 데이터에도 접근 가능한 보안 취약점이 발생할 수 있음
+
+### 9. Gradle 빌드 중 Daemon이 강제 종료됨 (메모리 부족)
+- **원인**: 프리티어 EC2(t2.micro/t3.micro)는 메모리가 1GB뿐인데, Gradle 빌드가 순간적으로 이를 초과해 리눅스가 프로세스를 강제 종료함
+- **해결**: 스왑(Swap) 메모리를 추가해 물리 메모리 부족분을 디스크로 보충
+  ```bash
+  sudo fallocate -l 1G /swapfile
+  sudo chmod 600 /swapfile
+  sudo mkswap /swapfile
+  sudo swapon /swapfile
+  ```
+- **배운 점**: 로컬 개발 환경과 배포 서버의 사양 차이로 인해, 로컬에서는 문제없던 빌드가 서버에서는 실패할 수 있음
+
+### 10. 디스크 공간 부족으로 빌드 캐시 저장 실패
+- **원인**: 기본 스토리지(8GB)가 OS, Docker, 빌드 캐시로 인해 91%까지 사용되어 `Could not write cache value` 에러 발생
+- **해결**: AWS 콘솔에서 EBS 볼륨을 20GB로 확장한 뒤, 서버 내부에서 파티션과 파일시스템을 실제로 확장
+  ```bash
+  sudo growpart /dev/nvme0n1 1
+  sudo resize2fs /dev/nvme0n1p1
+  ```
+- **배운 점**: 클라우드 콘솔에서 볼륨 크기를 늘리는 것과, 서버 내부의 파일시스템이 그 공간을 인식하는 것은 별개의 단계임
+
+### 11. `docker system prune -a` 실행 중 MySQL 컨테이너가 함께 삭제됨
+- **원인**: 디스크 공간 확보를 위해 실행한 `docker system prune -a -f` 명령어가, 당시 중지 상태였던 MySQL 컨테이너까지 함께 삭제함
+- **확인**: 이후 애플리케이션 실행 시 `Unable to determine Dialect` 에러가 발생, 로그를 근본 원인까지 추적한 결과 DB 연결 자체가 불가능한 상태였음을 확인
+- **해결**: MySQL 컨테이너를 동일한 설정으로 재생성
+- **배운 점**: `docker system prune`의 `-a` 옵션은 실행 중이 아닌 컨테이너/이미지까지 모두 삭제하므로 신중하게 사용해야 하며, 여러 에러가 연쇄적으로 발생할 때는 가장 근본적인 원인(root cause)부터 확인해야 함
+
 ## 💭 배운 점
 
 - JPA 연관관계(`@ManyToOne`, `mappedBy`, 연관관계의 주인)와 FK 제약이 실제 데이터 삭제에 미치는 영향
@@ -196,4 +242,8 @@ jwt.expiration=3600000
 - JWT의 구조(Header/Payload/Signature)와, 서명 기반 위변조 방지 원리 (암호화가 아닌 서명이라는 점)
 - BCrypt를 이용한 단방향 해싱과, HTTPS(전송 구간 보호)의 역할 차이
 - Spring Security의 필터 체인 구조와, 커스텀 필터를 등록해 인증 로직을 확장하는 방법
+- Mockito, `@DataJpaTest`, `@WebMvcTest`를 활용한 계층별 테스트 전략의 차이(단위 테스트 vs 슬라이스 테스트)
+- AWS EC2를 이용한 실제 배포 과정과, 로컬 개발 환경과 서버 환경(메모리, 디스크 사양)의 차이에서 오는 문제들
+- Docker 명령어(`system prune` 등)의 옵션이 미치는 영향과, 인프라 작업 시 신중함의 중요성
+- 여러 에러가 연쇄적으로 발생할 때, 로그를 근본 원인(root cause)까지 추적하는 습관
 - Git을 이용한 변경 이력 관리와, 트러블슈팅을 기록하는 습관의 중요성
