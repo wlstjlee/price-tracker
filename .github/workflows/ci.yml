@@ -10,6 +10,20 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: testpassword
+          MYSQL_DATABASE: price_tracker
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
     steps:
       - name: 코드 체크아웃
         uses: actions/checkout@v4
@@ -25,3 +39,7 @@ jobs:
 
       - name: 빌드 및 테스트 실행
         run: ./gradlew build
+        env:
+          SPRING_DATASOURCE_URL: jdbc:mysql://localhost:3306/price_tracker
+          SPRING_DATASOURCE_USERNAME: root
+          SPRING_DATASOURCE_PASSWORD: testpassword
